@@ -6,6 +6,7 @@ import QuizMode from '../components/prep/QuizMode';
 import Timer from '../components/prep/Timer';
 import { useFlashcards } from '../hooks/useFlashcards';
 import { useLocalStorage } from '../hooks/useLocalStorage';
+import { PREF_KEYS } from '../utils/localPrefs';
 
 const TABS = [
   { id: 'cards', label: 'Flashcards', icon: Layers },
@@ -18,7 +19,7 @@ type Tab = (typeof TABS)[number]['id'];
 
 export default function InterviewPrep() {
   const { cards, addCard, updateCard, deleteCard, markCard } = useFlashcards();
-  const [tab, setTab] = useLocalStorage<Tab>('prepTab', 'cards');
+  const [tab, setTab] = useLocalStorage<Tab>(PREF_KEYS.prepTab, 'cards');
 
   const learned = cards.filter((c) => c.status === 'learned').length;
   const review = cards.filter((c) => c.status === 'review').length;

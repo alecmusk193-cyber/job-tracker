@@ -1,19 +1,21 @@
 import { useCallback } from 'react';
-import { sampleActivities, sampleJobs } from '../data/sampleJobs';
 import type { Activity, ActivityType, Job, JobInput, JobStatus } from '../types';
 import { uid } from '../utils/id';
 import { STORAGE_KEYS } from '../utils/storage';
-import { useLocalStorage } from './useLocalStorage';
+import { useFirestore } from './useFirestore';
 
 const MAX_ACTIVITIES = 100;
+// Stable fallbacks shown only before Firestore data is loaded
+const NO_JOBS: Job[] = [];
+const NO_ACTIVITIES: Activity[] = [];
 
 /**
  * CRUD operations for job applications. Every mutation also appends an
  * entry to the activity log that powers the dashboard timeline.
  */
 export function useJobs() {
-  const [jobs, setJobs] = useLocalStorage<Job[]>(STORAGE_KEYS.jobs, sampleJobs);
-  const [activities, setActivities] = useLocalStorage<Activity[]>(STORAGE_KEYS.activities, sampleActivities);
+  const [jobs, setJobs] = useFirestore<Job[]>(STORAGE_KEYS.jobs, NO_JOBS);
+  const [activities, setActivities] = useFirestore<Activity[]>(STORAGE_KEYS.activities, NO_ACTIVITIES);
 
   const log = useCallback(
     (type: ActivityType, jobId: string, message: string) => {

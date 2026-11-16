@@ -1,28 +1,15 @@
-import { Database, Download, Eraser, RefreshCcw, Upload } from 'lucide-react';
+import { Cloud, Database, Download, Eraser, RefreshCcw, Upload } from 'lucide-react';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import ConfirmDialog from '../components/common/ConfirmDialog';
 import ThemeToggle from '../components/layout/ThemeToggle';
+import { useAuth } from '../context/AuthContext';
 import { useBackup } from '../hooks/useBackup';
 import { useDocuments } from '../hooks/useDocuments';
 import { useFlashcards } from '../hooks/useFlashcards';
 import { useJobs } from '../hooks/useJobs';
 import { useStudyPlan } from '../hooks/useStudyPlan';
-import { clearAll, STORAGE_KEYS, STORAGE_PREFIX, writeStorage } from '../utils/storage';
-
-/** Approximate bytes used by this app in localStorage. */
-function storageSize(): number {
-  let total = 0;
-  try {
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i)!;
-      if (k.startsWith(STORAGE_PREFIX)) total += (k.length + (localStorage.getItem(k)?.length ?? 0)) * 2;
-    }
-  } catch {
-    /* ignore */
-  }
-  return total;
-}
+import { clearAllData, dataSize, restoreSampleData } from '../utils/storage';
 
 export default function Settings() {
   const { exportJSON, openImport, fileInput } = useBackup();
@@ -30,6 +17,8 @@ export default function Settings() {
   const { cards } = useFlashcards();
   const { topics } = useStudyPlan();
   const { docs } = useDocuments();
+  const { user } = useAuth();
+  const size = dataSize();
   const [action, setAction] = useState<'reset' | 'empty' | null>(null);
 
   const stats = [
@@ -41,12 +30,10 @@ export default function Settings() {
 
   const confirm = () => {
     if (action === 'reset') {
-      clearAll(); // components fall back to the bundled sample data
+      restoreSampleData();
       toast.success('Sample data restored');
     } else if (action === 'empty') {
-      [STORAGE_KEYS.jobs, STORAGE_KEYS.activities, STORAGE_KEYS.flashcards, STORAGE_KEYS.study, STORAGE_KEYS.documents].forEach((k) =>
-        writeStorage(k, []),
-      );
+      clearAllData();
       toast.success('All data cleared — fresh start!');
     }
     setAction(null);
@@ -56,7 +43,7 @@ export default function Settings() {
     <div className="mx-auto max-w-3xl space-y-6">
       <div>
         <h2 className="text-2xl font-semibold">Backup & settings</h2>
-        <p className="text-sm text-slate-500 dark:text-slate-400">All data lives in your browser’s localStorage — nothing is sent to a server.</p>
+        <p className="text-sm text-slate-500 dark:text-slate-400">Your data is stored in Firebase Firestore and syncs in real time across every device you sign in on.</p>
       </div>
 
       <section className="card p-5">
@@ -71,13 +58,18 @@ export default function Settings() {
             </div>
           ))}
         </div>
-        <p className="mt-3 text-xs text-slate-500">≈ {(storageSize() / 1024).toFixed(1)} KB used (browsers allow ~5 MB).</p>
+        <p className="mt-3 flex items-center gap-1.5 text-xs text-slate-500">
+          <Cloud size={14} /> Synced as <span className="font-medium">{user?.email}</span> · ≈ {(size.total / 1024).toFixed(1)} KB
+          {size.largest.bytes > 700 * 1024 && (
+            <span className="text-amber-600"> · “{size.largest.key}” is close to Firestore’s 1 MB document limit</span>
+          )}
+        </p>
       </section>
 
       <section className="card p-5">
         <h3 className="font-semibold">Backup</h3>
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          Download everything as a JSON file, or restore from a previous backup (this overwrites current data).
+          Download everything as a JSON file, or restore from a previous backup — including backups from the old offline version. Importing overwrites the matching data on all your devices.
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
           <button className="btn-primary" onClick={exportJSON}>

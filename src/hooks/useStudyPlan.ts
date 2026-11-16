@@ -1,13 +1,14 @@
 import { useCallback } from 'react';
-import { sampleStudy } from '../data/sampleStudy';
 import type { Resource, StudyTask, StudyTopic } from '../types';
 import { uid } from '../utils/id';
 import { STORAGE_KEYS } from '../utils/storage';
-import { useLocalStorage } from './useLocalStorage';
+import { useFirestore } from './useFirestore';
+
+const NO_TOPICS: StudyTopic[] = [];
 
 /** CRUD for weekly study topics, their daily tasks and resources. */
 export function useStudyPlan() {
-  const [topics, setTopics] = useLocalStorage<StudyTopic[]>(STORAGE_KEYS.study, sampleStudy);
+  const [topics, setTopics] = useFirestore<StudyTopic[]>(STORAGE_KEYS.study, NO_TOPICS);
 
   const patchTopic = useCallback(
     (id: string, fn: (t: StudyTopic) => StudyTopic) => setTopics((prev) => prev.map((t) => (t.id === id ? fn(t) : t))),

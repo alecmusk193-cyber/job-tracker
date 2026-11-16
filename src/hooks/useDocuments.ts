@@ -1,13 +1,14 @@
 import { useCallback } from 'react';
-import { sampleDocuments } from '../data/sampleDocuments';
 import type { DocVersion, DocumentType } from '../types';
 import { uid } from '../utils/id';
 import { STORAGE_KEYS } from '../utils/storage';
-import { useLocalStorage } from './useLocalStorage';
+import { useFirestore } from './useFirestore';
 
-/** Text-based resume / cover-letter versions stored in localStorage. */
+const NO_DOCS: DocVersion[] = [];
+
+/** Text-based resume / cover-letter versions, synced via Firestore. */
 export function useDocuments() {
-  const [docs, setDocs] = useLocalStorage<DocVersion[]>(STORAGE_KEYS.documents, sampleDocuments);
+  const [docs, setDocs] = useFirestore<DocVersion[]>(STORAGE_KEYS.documents, NO_DOCS);
 
   const addDoc = useCallback(
     (type: DocumentType, title: string, content = '') => {
@@ -35,9 +36,12 @@ export interface Profile {
   email: string;
 }
 
-const DEFAULT_PROFILE: Profile = { name: 'Alex Nguyen', email: 'alex@example.com' };
+const DEFAULT_PROFILE: Profile = { name: '', email: '' };
 
-/** The user's own name/email used to fill {{myName}} / {{myEmail}}. */
+/**
+ * The user's own name/email used to fill {{myName}} / {{myEmail}}.
+ * Pre-filled from the Google account on first sign-in.
+ */
 export function useProfile() {
-  return useLocalStorage<Profile>(STORAGE_KEYS.profile, DEFAULT_PROFILE);
+  return useFirestore<Profile>(STORAGE_KEYS.profile, DEFAULT_PROFILE);
 }

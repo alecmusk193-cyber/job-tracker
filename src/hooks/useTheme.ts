@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { STORAGE_KEYS } from '../utils/storage';
+import { PREF_KEYS } from '../utils/localPrefs';
 import { useLocalStorage } from './useLocalStorage';
 
 type Theme = 'light' | 'dark';
@@ -9,9 +9,9 @@ const systemTheme = (): Theme =>
 
 const initialTheme = systemTheme();
 
-/** Light/dark theme persisted in localStorage; toggles the `dark` class on <html>. */
+/** Light/dark theme — a per-device preference kept in localStorage; toggles the `dark` class on <html>. */
 export function useTheme() {
-  const [theme, setTheme] = useLocalStorage<Theme>(STORAGE_KEYS.theme, initialTheme);
+  const [theme, setTheme] = useLocalStorage<Theme>(PREF_KEYS.theme, initialTheme);
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark');

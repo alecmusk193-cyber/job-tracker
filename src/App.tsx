@@ -3,18 +3,22 @@ import { useState } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import Header from './components/layout/Header';
+import RequireAuth from './components/layout/RequireAuth';
 import Sidebar from './components/layout/Sidebar';
+import { isFirebaseConfigured } from './config/firebase';
 import { useTheme } from './hooks/useTheme';
 import Dashboard from './pages/Dashboard';
 import Documents from './pages/Documents';
 import InterviewPrep from './pages/InterviewPrep';
 import Jobs from './pages/Jobs';
+import Login from './pages/Login';
 import Settings from './pages/Settings';
+import SetupRequired from './pages/SetupRequired';
 import StudyPlanPage from './pages/StudyPlan';
 
-export default function App() {
+/** Sidebar + header shell for every signed-in page. */
+function AppLayout() {
   const location = useLocation();
-  const { theme } = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
@@ -36,18 +40,42 @@ export default function App() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
           >
-              <Routes location={location}>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/jobs" element={<Jobs />} />
-                <Route path="/prep" element={<InterviewPrep />} />
-                <Route path="/study" element={<StudyPlanPage />} />
-                <Route path="/documents" element={<Documents />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
+            <Routes location={location}>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/jobs" element={<Jobs />} />
+              <Route path="/prep" element={<InterviewPrep />} />
+              <Route path="/study" element={<StudyPlanPage />} />
+              <Route path="/documents" element={<Documents />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
           </motion.div>
         </main>
       </div>
+    </div>
+  );
+}
+
+export default function App() {
+  const { theme } = useTheme();
+
+  return (
+    <>
+      {isFirebaseConfigured ? (
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route
+            path="/*"
+            element={
+              <RequireAuth>
+                <AppLayout />
+              </RequireAuth>
+            }
+          />
+        </Routes>
+      ) : (
+        <SetupRequired />
+      )}
 
       <Toaster
         position="bottom-right"
@@ -59,6 +87,6 @@ export default function App() {
               : { background: '#ffffff', color: '#0f172a', border: '1px solid #e2e8f0' },
         }}
       />
-    </div>
+    </>
   );
 }
