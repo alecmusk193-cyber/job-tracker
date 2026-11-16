@@ -1,6 +1,6 @@
 /**
  * Shared domain types for the whole app.
- * Everything here is persisted to localStorage as JSON, so keep it serialisable
+ * Everything here is persisted to Firestore as JSON-like data, so keep it serialisable
  * (dates are stored as ISO strings "YYYY-MM-DD" or full ISO timestamps).
  */
 

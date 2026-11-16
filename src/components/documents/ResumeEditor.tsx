@@ -10,7 +10,7 @@ import EmptyState from '../common/EmptyState';
 
 /**
  * Two-pane editor: version list on the left, plain-text editor on the right.
- * Content autosaves to localStorage (debounced).
+ * Content autosaves to Firestore (debounced).
  */
 export default function ResumeEditor({ type }: { type: DocumentType }) {
   const { docs, addDoc, updateDoc, deleteDoc } = useDocuments();

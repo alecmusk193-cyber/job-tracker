@@ -2,9 +2,10 @@ import { Download, Menu, Upload } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { useBackup } from '../../hooks/useBackup';
 import { NAV_ITEMS } from './navItems';
+import SyncStatus from './SyncStatus';
 import ThemeToggle from './ThemeToggle';
 
-/** Sticky top bar: page title, quick backup actions and theme toggle. */
+/** Sticky top bar: page title, sync status, quick backup actions and theme toggle. */
 export default function Header({ onMenuClick }: { onMenuClick: () => void }) {
   const { pathname } = useLocation();
   const { exportJSON, openImport, fileInput } = useBackup();
@@ -16,6 +17,7 @@ export default function Header({ onMenuClick }: { onMenuClick: () => void }) {
         <Menu size={20} />
       </button>
       <h1 className="flex-1 truncate text-lg font-semibold">{title}</h1>
+      <SyncStatus />
 
       <button onClick={exportJSON} className="btn-ghost hidden sm:inline-flex" title="Export JSON backup">
         <Download size={16} /> Export

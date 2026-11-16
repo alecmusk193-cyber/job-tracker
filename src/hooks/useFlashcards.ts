@@ -1,13 +1,14 @@
 import { useCallback } from 'react';
-import { sampleFlashcards } from '../data/sampleFlashcards';
 import type { Flashcard, FlashcardStatus } from '../types';
 import { uid } from '../utils/id';
 import { STORAGE_KEYS } from '../utils/storage';
-import { useLocalStorage } from './useLocalStorage';
+import { useFirestore } from './useFirestore';
+
+const NO_CARDS: Flashcard[] = [];
 
 /** CRUD + review-status helpers for interview flashcards. */
 export function useFlashcards() {
-  const [cards, setCards] = useLocalStorage<Flashcard[]>(STORAGE_KEYS.flashcards, sampleFlashcards);
+  const [cards, setCards] = useFirestore<Flashcard[]>(STORAGE_KEYS.flashcards, NO_CARDS);
 
   const addCard = useCallback(
     (card: Omit<Flashcard, 'id' | 'status'>) => setCards((prev) => [{ ...card, id: uid(), status: 'new' }, ...prev]),

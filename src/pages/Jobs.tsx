@@ -11,6 +11,7 @@ import JobTable from '../components/jobs/JobTable';
 import KanbanBoard from '../components/jobs/KanbanBoard';
 import { useJobs } from '../hooks/useJobs';
 import { useLocalStorage } from '../hooks/useLocalStorage';
+import { PREF_KEYS } from '../utils/localPrefs';
 import type { Job, JobInput, JobStatus } from '../types';
 import { downloadFile, jobsToCSV } from '../utils/csv';
 import { today } from '../utils/date';
@@ -19,7 +20,7 @@ type View = 'kanban' | 'table';
 
 export default function Jobs() {
   const { jobs, addJob, updateJob, moveJob, deleteJob } = useJobs();
-  const [view, setView] = useLocalStorage<View>('jobsView', 'kanban');
+  const [view, setView] = useLocalStorage<View>(PREF_KEYS.jobsView, 'kanban');
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
   const [editing, setEditing] = useState<Job | null>(null);
   const [formOpen, setFormOpen] = useState(false);

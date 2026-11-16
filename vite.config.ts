@@ -23,6 +23,7 @@ export default defineConfig(({ command, isPreview }) => ({
           charts: ['recharts'],
           motion: ['framer-motion'],
           dnd: ['@hello-pangea/dnd'],
+          firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore'],
         },
       },
     },

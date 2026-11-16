@@ -2,16 +2,18 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Plus, RotateCcw, Trash2 } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import toast from 'react-hot-toast';
-import { checklistSuggestions, defaultChecklist } from '../../data/checklistTemplates';
-import { useLocalStorage } from '../../hooks/useLocalStorage';
+import { checklistSuggestions } from '../../data/checklistTemplates';
+import { useFirestore } from '../../hooks/useFirestore';
 import type { ChecklistItem } from '../../types';
 import { uid } from '../../utils/id';
 import { STORAGE_KEYS } from '../../utils/storage';
 import ProgressBar from '../study/ProgressBar';
 
+const NO_ITEMS: ChecklistItem[] = [];
+
 /** Pre-interview checklist with progress and quick-add suggestions. */
 export default function Checklist() {
-  const [items, setItems] = useLocalStorage<ChecklistItem[]>(STORAGE_KEYS.checklist, defaultChecklist);
+  const [items, setItems] = useFirestore<ChecklistItem[]>(STORAGE_KEYS.checklist, NO_ITEMS);
   const [text, setText] = useState('');
 
   const done = items.filter((i) => i.done).length;

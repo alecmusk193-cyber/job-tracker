@@ -5,7 +5,8 @@ import { today } from '../utils/date';
 import { exportAll, importAll } from '../utils/storage';
 
 /**
- * Export every localStorage key to a JSON file, or restore from one.
+ * Export all synced data to a JSON file, or restore from one (the restore
+ * is written to Firestore and therefore reaches every signed-in device).
  * Returns a hidden <input type="file"> element that must be rendered.
  */
 export function useBackup() {

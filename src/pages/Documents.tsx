@@ -3,6 +3,7 @@ import { FileText, Mail, Wand2 } from 'lucide-react';
 import CoverLetterTemplate from '../components/documents/CoverLetterTemplate';
 import ResumeEditor from '../components/documents/ResumeEditor';
 import { useLocalStorage } from '../hooks/useLocalStorage';
+import { PREF_KEYS } from '../utils/localPrefs';
 
 const TABS = [
   { id: 'resume', label: 'Resumes', icon: FileText },
@@ -13,7 +14,7 @@ const TABS = [
 type Tab = (typeof TABS)[number]['id'];
 
 export default function Documents() {
-  const [tab, setTab] = useLocalStorage<Tab>('docsTab', 'resume');
+  const [tab, setTab] = useLocalStorage<Tab>(PREF_KEYS.docsTab, 'resume');
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">

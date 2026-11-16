@@ -1,7 +1,8 @@
 import clsx from 'clsx';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Briefcase, X } from 'lucide-react';
-import { NavLink } from 'react-router-dom';
+import { Briefcase, LogOut, X } from 'lucide-react';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import { useJobs } from '../../hooks/useJobs';
 import { NAV_ITEMS } from './navItems';
 
@@ -13,6 +14,8 @@ interface Props {
 /** Fixed sidebar on desktop, slide-in drawer on mobile. */
 export default function Sidebar({ open, onClose }: Props) {
   const { jobs } = useJobs();
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   const active = jobs.filter((j) => j.status !== 'Rejected' && j.status !== 'Offer').length;
 
   const content = (
@@ -57,9 +60,34 @@ export default function Sidebar({ open, onClose }: Props) {
         ))}
       </nav>
 
-      <div className="m-3 rounded-xl bg-gradient-to-br from-brand-600 to-violet-600 p-4 text-white">
-        <p className="text-sm font-semibold">Your data stays local</p>
-        <p className="mt-1 text-xs text-white/80">Everything is saved in this browser. Export a JSON backup regularly.</p>
+      {/* Signed-in user + logout */}
+      <div className="border-t border-slate-200 p-3 dark:border-slate-800">
+        <div className="flex items-center gap-3 rounded-xl px-2 py-2">
+          {user?.photoURL ? (
+            <img src={user.photoURL} alt="" referrerPolicy="no-referrer" className="h-9 w-9 shrink-0 rounded-full" />
+          ) : (
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-600 text-sm font-semibold text-white">
+              {(user?.displayName ?? user?.email ?? '?').charAt(0).toUpperCase()}
+            </span>
+          )}
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium">{user?.displayName ?? 'Signed in'}</p>
+            <p className="truncate text-xs text-slate-500 dark:text-slate-400">{user?.email}</p>
+          </div>
+          <button
+            onClick={async () => {
+              onClose();
+              await signOut();
+              // Explicit logout: go to a clean login page so the next sign-in lands on the Dashboard
+              navigate('/login', { replace: true });
+            }}
+            className="btn-icon shrink-0 hover:text-rose-600"
+            aria-label="Log out"
+            title="Log out"
+          >
+            <LogOut size={18} />
+          </button>
+        </div>
       </div>
     </div>
   );
