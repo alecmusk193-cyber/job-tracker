@@ -117,12 +117,12 @@ export function startSync(user: User, timeoutMs = 6000): Promise<void> {
           e.pending = snap.metadata.hasPendingWrites;
           e.fromCache = snap.metadata.fromCache;
 
-          if (snap.exists()) {
+          if (snap.exists() && snap.data().value !== undefined) {
             e.value = snap.data().value;
             e.hasValue = true;
             e.ready = true;
           } else if (!snap.metadata.fromCache) {
-            // Confirmed by the server: this user has no data for `key` yet → seed it.
+            // Confirmed by the server: no (usable) data for `key` yet → seed it.
             const initial = seedValue(key, user);
             e.value = initial;
             e.hasValue = true;
@@ -181,10 +181,21 @@ export function subscribe(key: string, listener: Listener): () => void {
   return () => listeners.get(key)?.delete(listener);
 }
 
-/** Current value for `key`, or `fallback` while nothing is loaded. Stable reference between changes. */
+/**
+ * Current value for `key`, or `fallback` while nothing is loaded.
+ * Stable reference between changes. If the stored value has the wrong shape
+ * (e.g. a document edited by hand in the console), the fallback is returned
+ * instead so the UI never crashes on unexpected data.
+ */
 export function readValue<T>(key: string, fallback: T): T {
   const e = entries.get(key);
-  return e?.hasValue ? (e.value as T) : fallback;
+  if (!e?.hasValue) return fallback;
+  const v = e.value;
+  if (Array.isArray(fallback) && !Array.isArray(v)) return fallback;
+  if (fallback !== null && typeof fallback === 'object' && !Array.isArray(fallback) && (v === null || typeof v !== 'object' || Array.isArray(v))) {
+    return fallback;
+  }
+  return v as T;
 }
 
 /** Optimistically update the cache and persist to Firestore in the background. */

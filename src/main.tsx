@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { HashRouter } from 'react-router-dom';
 import App from './App';
+import ErrorBoundary from './components/common/ErrorBoundary';
 import { isFirebaseConfigured } from './config/firebase';
 import { AuthProvider } from './context/AuthContext';
 import './index.css';
@@ -13,15 +14,17 @@ import './index.css';
  */
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <HashRouter>
-      {/* Without a Firebase config there is nothing to authenticate against */}
-      {isFirebaseConfigured ? (
-        <AuthProvider>
+    <ErrorBoundary>
+      <HashRouter>
+        {/* Without a Firebase config there is nothing to authenticate against */}
+        {isFirebaseConfigured ? (
+          <AuthProvider>
+            <App />
+          </AuthProvider>
+        ) : (
           <App />
-        </AuthProvider>
-      ) : (
-        <App />
-      )}
-    </HashRouter>
+        )}
+      </HashRouter>
+    </ErrorBoundary>
   </React.StrictMode>,
 );
