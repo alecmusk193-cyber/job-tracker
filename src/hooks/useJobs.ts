@@ -1,10 +1,19 @@
 import { useCallback } from 'react';
 import type { Activity, ActivityType, Job, JobInput, JobStatus } from '../types';
+import { today } from '../utils/date';
 import { uid } from '../utils/id';
 import { STORAGE_KEYS } from '../utils/storage';
 import { useFirestore } from './useFirestore';
 
 const MAX_ACTIVITIES = 100;
+
+const leavesWishlist = (from: JobStatus, to?: JobStatus) => from === 'Wishlist' && !!to && to !== 'Wishlist';
+
+function statusMessage(company: string, from: JobStatus, to: JobStatus): string {
+  if (from === 'Wishlist' && to === 'Applied') return `Applied to ${company} (from wishlist)`;
+  if (to === 'Wishlist') return `${company} moved back to wishlist`;
+  return `${company} moved to ${to}${to === 'Offer' ? ' 🎉' : ''}`;
+}
 // Stable fallbacks shown only before Firestore data is loaded
 const NO_JOBS: Job[] = [];
 const NO_ACTIVITIES: Activity[] = [];
@@ -31,7 +40,11 @@ export function useJobs() {
       const now = new Date().toISOString();
       const job: Job = { ...input, id: uid(), createdAt: now, updatedAt: now };
       setJobs((prev) => [job, ...prev]);
-      log('created', job.id, `Applied to ${job.company} — ${job.position}`);
+      log(
+        'created',
+        job.id,
+        job.status === 'Wishlist' ? `Added ${job.company} — ${job.position} to wishlist` : `Applied to ${job.company} — ${job.position}`,
+      );
       return job;
     },
     [setJobs, log],
@@ -40,10 +53,16 @@ export function useJobs() {
   const updateJob = useCallback(
     (id: string, input: Partial<JobInput>) => {
       const existing = jobs.find((j) => j.id === id);
-      setJobs((prev) => prev.map((j) => (j.id === id ? { ...j, ...input, updatedAt: new Date().toISOString() } : j)));
       if (!existing) return;
-      if (input.status && input.status !== existing.status) {
-        log('status', id, `${existing.company} moved to ${input.status}${input.status === 'Offer' ? ' 🎉' : ''}`);
+      const patch = { ...input };
+      // Leaving the wishlist = the application was just sent → stamp today's date
+      // (unless the user picked another date in the form).
+      if (leavesWishlist(existing.status, patch.status) && (!patch.dateApplied || patch.dateApplied === existing.dateApplied)) {
+        patch.dateApplied = today();
+      }
+      setJobs((prev) => prev.map((j) => (j.id === id ? { ...j, ...patch, updatedAt: new Date().toISOString() } : j)));
+      if (patch.status && patch.status !== existing.status) {
+        log('status', id, statusMessage(existing.company, existing.status, patch.status));
       } else {
         log('updated', id, `Updated ${existing.company} — ${existing.position}`);
       }
@@ -60,7 +79,13 @@ export function useJobs() {
       const existing = jobs.find((j) => j.id === id);
       if (!existing) return;
       setJobs((prev) => {
-        const moved = { ...existing, status, updatedAt: status !== existing.status ? new Date().toISOString() : existing.updatedAt };
+        const changed = status !== existing.status;
+        const moved = {
+          ...existing,
+          status,
+          dateApplied: leavesWishlist(existing.status, status) ? today() : existing.dateApplied,
+          updatedAt: changed ? new Date().toISOString() : existing.updatedAt,
+        };
         const rest = prev.filter((j) => j.id !== id);
         const idx = beforeId ? rest.findIndex((j) => j.id === beforeId) : -1;
         if (idx === -1) rest.push(moved);
@@ -68,7 +93,7 @@ export function useJobs() {
         return rest;
       });
       if (status !== existing.status) {
-        log('status', id, `${existing.company} moved to ${status}${status === 'Offer' ? ' 🎉' : ''}`);
+        log('status', id, statusMessage(existing.company, existing.status, status));
       }
     },
     [jobs, setJobs, log],
@@ -83,5 +108,8 @@ export function useJobs() {
     [jobs, setJobs, log],
   );
 
-  return { jobs, activities, addJob, updateJob, moveJob, deleteJob, setJobs };
+  /** One-click "I sent it": Wishlist → Applied (dated today). */
+  const markApplied = useCallback((id: string) => updateJob(id, { status: 'Applied' }), [updateJob]);
+
+  return { jobs, activities, addJob, updateJob, moveJob, markApplied, deleteJob, setJobs };
 }

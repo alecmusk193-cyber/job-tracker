@@ -7,6 +7,7 @@
 // ---------- Jobs ----------
 
 export const JOB_STATUSES = [
+  'Wishlist', // planning to apply ("dự tính apply") — not sent yet
   'Applied',
   'Phone Screen',
   'Technical',
@@ -18,6 +19,10 @@ export const JOB_STATUSES = [
 export type JobStatus = (typeof JOB_STATUSES)[number];
 
 export type WorkLocation = 'Remote' | 'Onsite' | 'Hybrid';
+
+/** How eager you are to apply — used to sort the wishlist. */
+export const PRIORITIES = ['High', 'Medium', 'Low'] as const;
+export type Priority = (typeof PRIORITIES)[number];
 
 export interface Contact {
   name: string;
@@ -34,7 +39,9 @@ export interface Job {
   salaryMin?: number;
   salaryMax?: number;
   status: JobStatus;
-  dateApplied: string; // YYYY-MM-DD
+  dateApplied: string; // YYYY-MM-DD — for Wishlist jobs: the date it was saved
+  plannedDate?: string; // YYYY-MM-DD — when you intend to apply (Wishlist)
+  priority?: Priority; // Wishlist priority
   deadline?: string; // YYYY-MM-DD
   interviewDate?: string; // ISO datetime of next scheduled interview
   notes: string;

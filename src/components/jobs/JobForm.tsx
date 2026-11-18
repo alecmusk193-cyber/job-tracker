@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
-import type { Job, JobInput, JobStatus, WorkLocation } from '../../types';
-import { JOB_STATUSES } from '../../types';
+import type { Job, JobInput, JobStatus, Priority, WorkLocation } from '../../types';
+import { JOB_STATUSES, PRIORITIES } from '../../types';
 import { today } from '../../utils/date';
 
 const EMPTY: JobInput = {
@@ -22,13 +22,18 @@ const EMPTY: JobInput = {
 
 interface Props {
   initial?: Job | null;
+  /** Status pre-selected for a new job (e.g. "Wishlist" from the "Save for later" button). */
+  defaultStatus?: JobStatus;
   onSubmit: (data: JobInput) => void;
   onCancel: () => void;
 }
 
 /** Create / edit form for a job application. */
-export default function JobForm({ initial, onSubmit, onCancel }: Props) {
-  const [form, setForm] = useState<JobInput>(() => (initial ? { ...EMPTY, ...initial } : EMPTY));
+export default function JobForm({ initial, defaultStatus, onSubmit, onCancel }: Props) {
+  const [form, setForm] = useState<JobInput>(() =>
+    initial ? { ...EMPTY, ...initial } : { ...EMPTY, status: defaultStatus ?? EMPTY.status, priority: defaultStatus === 'Wishlist' ? 'Medium' : undefined },
+  );
+  const isWishlist = form.status === 'Wishlist';
   const [tagInput, setTagInput] = useState((initial?.tags ?? []).join(', '));
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -56,6 +61,9 @@ export default function JobForm({ initial, onSubmit, onCancel }: Props) {
       tags: Array.from(new Set(tagInput.split(',').map((t) => t.trim().toLowerCase()).filter(Boolean))),
       deadline: form.deadline || undefined,
       interviewDate: form.interviewDate || undefined,
+      // Planning fields only matter while the job is on the wishlist
+      plannedDate: form.status === 'Wishlist' ? form.plannedDate || undefined : undefined,
+      priority: form.status === 'Wishlist' ? form.priority : undefined,
     });
   };
 
@@ -103,14 +111,40 @@ export default function JobForm({ initial, onSubmit, onCancel }: Props) {
         </div>
         <div>
           <label className="label" htmlFor="status">Status</label>
-          <select id="status" className="input" value={form.status} onChange={(e) => set('status', e.target.value as JobStatus)}>
+          <select
+            id="status"
+            className="input"
+            value={form.status}
+            onChange={(e) => {
+              const status = e.target.value as JobStatus;
+              setForm((f) => ({ ...f, status, priority: status === 'Wishlist' ? f.priority ?? 'Medium' : f.priority }));
+            }}
+          >
             {JOB_STATUSES.map((s) => (
-              <option key={s}>{s}</option>
+              <option key={s} value={s}>
+                {s === 'Wishlist' ? 'Wishlist (planning to apply)' : s}
+              </option>
             ))}
           </select>
         </div>
+        {isWishlist && (
+          <>
+            <div>
+              <label className="label" htmlFor="planned">Planned apply date</label>
+              <input id="planned" type="date" className="input" value={form.plannedDate ?? ''} onChange={(e) => set('plannedDate', e.target.value)} />
+            </div>
+            <div>
+              <label className="label" htmlFor="priority">Priority</label>
+              <select id="priority" className="input" value={form.priority ?? 'Medium'} onChange={(e) => set('priority', e.target.value as Priority)}>
+                {PRIORITIES.map((p) => (
+                  <option key={p}>{p}</option>
+                ))}
+              </select>
+            </div>
+          </>
+        )}
         <div>
-          <label className="label" htmlFor="applied">Date applied</label>
+          <label className="label" htmlFor="applied">{isWishlist ? 'Date saved' : 'Date applied'}</label>
           <input id="applied" type="date" className="input" value={form.dateApplied} onChange={(e) => set('dateApplied', e.target.value)} />
         </div>
         <div>
@@ -145,7 +179,7 @@ export default function JobForm({ initial, onSubmit, onCancel }: Props) {
           Cancel
         </button>
         <button type="submit" className="btn-primary">
-          {initial ? 'Save changes' : 'Add application'}
+          {initial ? 'Save changes' : isWishlist ? 'Save to wishlist' : 'Add application'}
         </button>
       </div>
     </form>

@@ -1,6 +1,7 @@
 import { Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { ActivityChart, StatusChart } from '../components/dashboard/Chart';
+import PlannedApplications from '../components/dashboard/PlannedApplications';
 import StatsCards from '../components/dashboard/StatsCards';
 import Timeline from '../components/dashboard/Timeline';
 import UpcomingInterviews from '../components/dashboard/UpcomingInterviews';
@@ -31,8 +32,9 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
-        <div className="min-w-0 lg:col-span-3">
+        <div className="min-w-0 space-y-6 lg:col-span-3">
           <UpcomingInterviews jobs={jobs} />
+          <PlannedApplications jobs={jobs} />
         </div>
         <div className="min-w-0 lg:col-span-2">
           <Timeline activities={activities} />

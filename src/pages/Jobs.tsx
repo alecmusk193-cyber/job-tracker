@@ -1,4 +1,4 @@
-import { Briefcase, Columns3, FileDown, List, Plus } from 'lucide-react';
+import { Bookmark, Briefcase, Columns3, FileDown, List, Plus } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useSearchParams } from 'react-router-dom';
@@ -19,11 +19,12 @@ import { today } from '../utils/date';
 type View = 'kanban' | 'table';
 
 export default function Jobs() {
-  const { jobs, addJob, updateJob, moveJob, deleteJob } = useJobs();
+  const { jobs, addJob, updateJob, moveJob, markApplied, deleteJob } = useJobs();
   const [view, setView] = useLocalStorage<View>(PREF_KEYS.jobsView, 'kanban');
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
   const [editing, setEditing] = useState<Job | null>(null);
   const [formOpen, setFormOpen] = useState(false);
+  const [newStatus, setNewStatus] = useState<JobStatus>('Applied');
   const [toDelete, setToDelete] = useState<Job | null>(null);
   const [params, setParams] = useSearchParams();
 
@@ -49,9 +50,15 @@ export default function Jobs() {
     });
   }, [jobs, filters, view]);
 
-  const openNew = () => {
+  const openNew = (status: JobStatus = 'Applied') => {
     setEditing(null);
+    setNewStatus(status);
     setFormOpen(true);
+  };
+
+  const handleMarkApplied = (job: Job) => {
+    markApplied(job.id);
+    toast.success(`Applied to ${job.company} 🚀`);
   };
   const openEdit = (job: Job) => {
     setEditing(job);
@@ -64,7 +71,7 @@ export default function Jobs() {
       toast.success(`Updated ${data.company}`);
     } else {
       addJob(data);
-      toast.success(`Added ${data.company}`);
+      toast.success(data.status === 'Wishlist' ? `Saved ${data.company} to wishlist` : `Added ${data.company}`);
     }
     setFormOpen(false);
   };
@@ -74,6 +81,7 @@ export default function Jobs() {
     moveJob(id, status, beforeId);
     if (job && job.status !== status) {
       if (status === 'Offer') toast.success(`${job.company}: Offer! 🎉`);
+      else if (job.status === 'Wishlist' && status === 'Applied') toast.success(`Applied to ${job.company} 🚀`);
       else toast(`${job.company} → ${status}`);
     }
   };
@@ -123,7 +131,10 @@ export default function Jobs() {
           <button className="btn-secondary" onClick={exportCSV} disabled={!filtered.length}>
             <FileDown size={16} /> CSV
           </button>
-          <button className="btn-primary" onClick={openNew}>
+          <button className="btn-secondary" onClick={() => openNew('Wishlist')} title="Save a job you plan to apply for">
+            <Bookmark size={16} /> Wishlist
+          </button>
+          <button className="btn-primary" onClick={() => openNew()}>
             <Plus size={16} /> Add job
           </button>
         </div>
@@ -137,21 +148,21 @@ export default function Jobs() {
           title="No applications yet"
           description="Start tracking your job search by adding your first application."
           action={
-            <button className="btn-primary" onClick={openNew}>
+            <button className="btn-primary" onClick={() => openNew()}>
               <Plus size={16} /> Add your first job
             </button>
           }
         />
       ) : view === 'kanban' ? (
-        <KanbanBoard jobs={filtered} onMove={handleMove} onEdit={openEdit} onDelete={setToDelete} />
+        <KanbanBoard jobs={filtered} onMove={handleMove} onEdit={openEdit} onDelete={setToDelete} onMarkApplied={handleMarkApplied} />
       ) : filtered.length ? (
         <JobTable jobs={filtered} onEdit={openEdit} onDelete={setToDelete} onStatusChange={handleStatusChange} />
       ) : (
         <EmptyState icon={Briefcase} title="No matches" description="Try changing your search or filters." />
       )}
 
-      <Modal open={formOpen} onClose={() => setFormOpen(false)} title={editing ? `Edit ${editing.company}` : 'New application'}>
-        <JobForm key={editing?.id ?? 'new'} initial={editing} onSubmit={handleSubmit} onCancel={() => setFormOpen(false)} />
+      <Modal open={formOpen} onClose={() => setFormOpen(false)} title={editing ? `Edit ${editing.company}` : newStatus === 'Wishlist' ? 'Save to wishlist' : 'New application'}>
+        <JobForm key={editing?.id ?? `new-${newStatus}`} initial={editing} defaultStatus={newStatus} onSubmit={handleSubmit} onCancel={() => setFormOpen(false)} />
       </Modal>
 
       <ConfirmDialog

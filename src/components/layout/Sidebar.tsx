@@ -16,7 +16,8 @@ export default function Sidebar({ open, onClose }: Props) {
   const { jobs } = useJobs();
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
-  const active = jobs.filter((j) => j.status !== 'Rejected' && j.status !== 'Offer').length;
+  // In-progress applications (excludes wishlist, offers and rejections)
+  const active = jobs.filter((j) => !['Wishlist', 'Rejected', 'Offer'].includes(j.status)).length;
 
   const content = (
     <div className="flex h-full flex-col">

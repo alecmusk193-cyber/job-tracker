@@ -15,7 +15,7 @@ import { useTheme } from '../../hooks/useTheme';
 import type { Job } from '../../types';
 import { JOB_STATUSES } from '../../types';
 import { addDays, parseDate, startOfWeek, toISODate } from '../../utils/date';
-import { STATUS_STYLES } from '../../utils/status';
+import { isApplied, STATUS_STYLES } from '../../utils/status';
 
 /** Theme-aware neutral colours for axes, grid and tooltip. */
 function useChartTheme() {
@@ -53,7 +53,7 @@ export function StatusChart({ jobs }: { jobs: Job[] }) {
     <div className="card p-5">
       <h3 className="font-semibold">Pipeline by status</h3>
       <p className="text-sm text-slate-500 dark:text-slate-400">Number of applications in each stage</p>
-      <div className="mt-4 h-64">
+      <div className="mt-4 h-72">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} layout="vertical" margin={{ left: 8, right: 32, top: 4, bottom: 4 }} barCategoryGap={6}>
             <CartesianGrid horizontal={false} stroke={t.grid} />
@@ -95,7 +95,7 @@ export function ActivityChart({ jobs }: { jobs: Job[] }) {
     const end = addDays(start, 7);
     return {
       week: parseDate(start).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
-      count: jobs.filter((j) => j.dateApplied >= start && j.dateApplied < end).length,
+      count: jobs.filter((j) => isApplied(j.status) && j.dateApplied >= start && j.dateApplied < end).length,
     };
   });
 

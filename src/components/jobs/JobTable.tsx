@@ -90,7 +90,15 @@ export default function JobTable({ jobs, onEdit, onDelete, onStatusChange }: Pro
                   {j.city && <span className="block text-xs text-slate-400">{j.city}</span>}
                 </td>
                 <td className="px-4 py-3 tabular-nums">{formatSalary(j.salaryMin, j.salaryMax)}</td>
-                <td className="px-4 py-3 whitespace-nowrap">{formatDate(j.dateApplied)}</td>
+                <td className="px-4 py-3 whitespace-nowrap">
+                  {j.status === 'Wishlist' ? (
+                    <span className="text-slate-500 dark:text-slate-400" title={`Saved ${formatDate(j.dateApplied)}`}>
+                      {j.plannedDate ? `Plan ${formatDate(j.plannedDate)}` : 'Not yet'}
+                    </span>
+                  ) : (
+                    formatDate(j.dateApplied)
+                  )}
+                </td>
                 <td className="px-4 py-3 whitespace-nowrap">{formatDate(j.deadline)}</td>
                 <td className="px-4 py-3">
                   <div className="flex flex-wrap gap-1">

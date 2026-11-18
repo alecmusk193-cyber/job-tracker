@@ -1,18 +1,22 @@
 import clsx from 'clsx';
-import { CalendarClock, ExternalLink, MapPin, Pencil, Trash2 } from 'lucide-react';
+import { CalendarClock, CalendarDays, ExternalLink, MapPin, Pencil, Send, Trash2 } from 'lucide-react';
 import type { Job } from '../../types';
 import { daysUntil, formatDate, formatDateTime } from '../../utils/date';
-import { formatSalary } from '../../utils/status';
+import { formatSalary, PRIORITY_STYLES } from '../../utils/status';
 
 interface Props {
   job: Job;
   onEdit: (job: Job) => void;
   onDelete: (job: Job) => void;
+  /** Wishlist only: mark as applied today. */
+  onMarkApplied?: (job: Job) => void;
   dragging?: boolean;
 }
 
 /** Compact card used inside Kanban columns. */
-export default function JobCard({ job, onEdit, onDelete, dragging }: Props) {
+export default function JobCard({ job, onEdit, onDelete, onMarkApplied, dragging }: Props) {
+  const wishlist = job.status === 'Wishlist';
+  const planDays = job.plannedDate ? daysUntil(job.plannedDate) : null;
   const deadlineSoon = job.deadline && daysUntil(job.deadline) >= 0 && daysUntil(job.deadline) <= 7;
   const upcoming = job.interviewDate && new Date(job.interviewDate) >= new Date();
 
@@ -46,6 +50,22 @@ export default function JobCard({ job, onEdit, onDelete, dragging }: Props) {
         {(job.salaryMin || job.salaryMax) && <span>{formatSalary(job.salaryMin, job.salaryMax)}</span>}
       </div>
 
+      {wishlist && (job.priority || job.plannedDate) && (
+        <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
+          {job.priority && <span className={`rounded px-1.5 py-0.5 font-semibold ${PRIORITY_STYLES[job.priority]}`}>{job.priority}</span>}
+          {job.plannedDate && (
+            <span
+              className={`inline-flex items-center gap-1 ${
+                planDays !== null && planDays < 0 ? 'font-medium text-rose-600 dark:text-rose-400' : 'text-slate-500 dark:text-slate-400'
+              }`}
+            >
+              <CalendarDays size={12} /> Plan {formatDate(job.plannedDate, { month: 'short', day: 'numeric' })}
+              {planDays !== null && planDays < 0 && ` (${-planDays}d overdue)`}
+            </span>
+          )}
+        </div>
+      )}
+
       {upcoming && (
         <p className="mt-2 inline-flex items-center gap-1 rounded-md bg-brand-50 px-2 py-1 text-xs font-medium text-brand-700 dark:bg-brand-500/10 dark:text-brand-300">
           <CalendarClock size={12} /> {formatDateTime(job.interviewDate)}
@@ -61,7 +81,9 @@ export default function JobCard({ job, onEdit, onDelete, dragging }: Props) {
       )}
 
       <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-2 text-xs text-slate-500 dark:border-slate-700 dark:text-slate-400">
-        <span>Applied {formatDate(job.dateApplied, { month: 'short', day: 'numeric' })}</span>
+        <span>
+          {wishlist ? 'Saved' : 'Applied'} {formatDate(job.dateApplied, { month: 'short', day: 'numeric' })}
+        </span>
         <div className="flex items-center gap-2">
           {deadlineSoon && <span className="font-medium text-rose-600 dark:text-rose-400">Due in {daysUntil(job.deadline!)}d</span>}
           {job.url && (
@@ -71,6 +93,14 @@ export default function JobCard({ job, onEdit, onDelete, dragging }: Props) {
           )}
         </div>
       </div>
+      {wishlist && onMarkApplied && (
+        <button
+          className="btn mt-3 w-full border border-[#008300]/30 bg-green-50 py-1.5 text-xs text-green-800 hover:bg-green-100 dark:border-green-500/30 dark:bg-green-500/10 dark:text-green-300 dark:hover:bg-green-500/20"
+          onClick={() => onMarkApplied(job)}
+        >
+          <Send size={13} /> Mark as applied
+        </button>
+      )}
     </div>
   );
 }

@@ -2,18 +2,25 @@ import { motion } from 'framer-motion';
 import { Briefcase, CalendarClock, Send, Trophy } from 'lucide-react';
 import type { Job } from '../../types';
 import { JOB_STATUSES } from '../../types';
-import { STATUS_STYLES } from '../../utils/status';
+import { isApplied, STATUS_STYLES } from '../../utils/status';
 
 /** KPI tiles + a per-status count row. */
 export default function StatsCards({ jobs }: { jobs: Job[] }) {
   const counts = Object.fromEntries(JOB_STATUSES.map((s) => [s, jobs.filter((j) => j.status === s).length]));
-  const active = jobs.filter((j) => !['Offer', 'Rejected'].includes(j.status)).length;
-  const responded = jobs.filter((j) => j.status !== 'Applied').length;
-  const responseRate = jobs.length ? Math.round((responded / jobs.length) * 100) : 0;
+  // Wishlist jobs haven't been sent yet, so they don't count as applications
+  const applied = jobs.filter((j) => isApplied(j.status));
+  const active = applied.filter((j) => !['Offer', 'Rejected'].includes(j.status)).length;
+  const responded = applied.filter((j) => j.status !== 'Applied').length;
+  const responseRate = applied.length ? Math.round((responded / applied.length) * 100) : 0;
   const upcoming = jobs.filter((j) => j.interviewDate && new Date(j.interviewDate) >= new Date()).length;
 
   const kpis = [
-    { label: 'Total applications', value: jobs.length, icon: Briefcase, hint: `${active} active` },
+    {
+      label: 'Total applications',
+      value: applied.length,
+      icon: Briefcase,
+      hint: `${active} active${counts.Wishlist ? ` · ${counts.Wishlist} planned` : ''}`,
+    },
     { label: 'Response rate', value: `${responseRate}%`, icon: Send, hint: `${responded} replied` },
     { label: 'Upcoming interviews', value: upcoming, icon: CalendarClock, hint: 'scheduled' },
     { label: 'Offers', value: counts.Offer, icon: Trophy, hint: counts.Offer ? 'congrats! 🎉' : 'keep going' },
@@ -40,11 +47,13 @@ export default function StatsCards({ jobs }: { jobs: Job[] }) {
         ))}
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-7">
         {JOB_STATUSES.map((s) => (
           <div key={s} className="card flex items-center gap-3 px-4 py-3">
             <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${STATUS_STYLES[s].dot}`} />
-            <span className="flex-1 truncate text-sm text-slate-600 dark:text-slate-300">{s}</span>
+            <span className="flex-1 truncate text-sm text-slate-600 dark:text-slate-300" title={s}>
+              {s}
+            </span>
             <span className="text-lg font-semibold tabular-nums">{counts[s]}</span>
           </div>
         ))}

@@ -14,12 +14,14 @@ A complete, offline-first web app to manage your job search: track applications 
 
 ### 📊 Dashboard
 - KPI tiles: total applications, response rate, upcoming interviews, offers
-- Count of jobs per status (Applied → Phone Screen → Technical → Onsite → Offer → Rejected)
+- Count of jobs per status (Wishlist → Applied → Phone Screen → Technical → Onsite → Offer → Rejected)
 - Charts (Recharts): pipeline by status and applications per week (last 8 weeks)
 - Upcoming interviews (with countdown) and deadlines in the next 2 weeks
+- Planned applications: your wishlist sorted by planned date and priority
 - Recent activity timeline (every create / update / status change is logged)
 
 ### 🗂️ Job Tracker
+- **Wishlist (planned applications)**: save jobs you intend to apply for with a planned apply date and priority (High / Medium / Low). They have their own Kanban column, show up on the dashboard under *Planned applications* (overdue plans highlighted), aren't counted in application stats, and one click on *Mark as applied* (or dragging to *Applied*) moves them on and stamps today's date
 - Add / edit / delete applications: company, position, work type (Remote / Onsite / Hybrid), city, job URL, salary range, status, date applied, deadline, next interview, notes, tags, recruiter name & email
 - **Kanban board**: drag & drop cards between status columns (order is persisted)
 - **Table view**: sortable columns, inline status change

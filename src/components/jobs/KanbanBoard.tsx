@@ -10,6 +10,7 @@ interface Props {
   onMove: (id: string, status: JobStatus, beforeId?: string) => void;
   onEdit: (job: Job) => void;
   onDelete: (job: Job) => void;
+  onMarkApplied: (job: Job) => void;
 }
 
 /**
@@ -17,7 +18,7 @@ interface Props {
  * Dropping a card into another column changes its status; dropping inside a
  * column reorders it (order is persisted in the jobs array).
  */
-export default function KanbanBoard({ jobs, onMove, onEdit, onDelete }: Props) {
+export default function KanbanBoard({ jobs, onMove, onEdit, onDelete, onMarkApplied }: Props) {
   const columns = JOB_STATUSES.map((status) => ({ status, items: jobs.filter((j) => j.status === status) }));
 
   const handleDragEnd = ({ source, destination, draggableId }: DropResult) => {
@@ -48,7 +49,10 @@ export default function KanbanBoard({ jobs, onMove, onEdit, onDelete }: Props) {
             )}
           >
             <div className="flex items-center justify-between px-3.5 py-3">
-              <h3 className="text-sm font-semibold">{status}</h3>
+              <h3 className="text-sm font-semibold">
+                {status}
+                {status === 'Wishlist' && <span className="ml-1.5 text-xs font-normal text-slate-500">· planned</span>}
+              </h3>
               <span className="rounded-full bg-white px-2 py-0.5 text-xs font-semibold tabular-nums text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                 {items.length}
               </span>
@@ -68,7 +72,7 @@ export default function KanbanBoard({ jobs, onMove, onEdit, onDelete }: Props) {
                     <Draggable key={job.id} draggableId={job.id} index={index}>
                       {(drag, dragSnapshot) => (
                         <div ref={drag.innerRef} {...drag.draggableProps} {...drag.dragHandleProps}>
-                          <JobCard job={job} onEdit={onEdit} onDelete={onDelete} dragging={dragSnapshot.isDragging} />
+                          <JobCard job={job} onEdit={onEdit} onDelete={onDelete} onMarkApplied={onMarkApplied} dragging={dragSnapshot.isDragging} />
                         </div>
                       )}
                     </Draggable>
